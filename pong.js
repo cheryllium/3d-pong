@@ -1,4 +1,5 @@
 let anaglyph;
+let fontValorax;
 
 const BOX_WIDTH = 700;
 const BOX_HEIGHT = 400;
@@ -15,8 +16,14 @@ let gameOn = false;
 let gameOver = false;
 let score = 0; 
 
+function preload() {
+  fontValorax = loadFont('fonts/Valorax.otf');
+}
+
 function setup() {
-  createCanvas(windowWidth, windowHeight, WEBGL);
+  const r = createCanvas(windowWidth, windowHeight, WEBGL);
+  const gl = r.canvas.getContext('webgl2');
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); 
   
   position = createVector(0, 0, 0);
   acceleration = createVector(5, 5, 12); 
@@ -54,7 +61,7 @@ function scene(pg) {
   if(gameOn) {
     // -- Get the mouse X and Y coords in 3D system
     let paddleMouseX = mouseX - windowWidth/2;
-    let paddleMouseY = -(mouseY - windowHeight/2);
+    let paddleMouseY = mouseY - windowHeight/2;
 
     // -- Get some constants about the world and camera
     const vfov = PI/3;
@@ -72,7 +79,7 @@ function scene(pg) {
     paddleX = tan(thetaX) * (eyeZ - paddleZ);
     
     const thetaY = atan(paddleMouseY / (9 * eyeZ / 10));
-    paddleY = tan(thetaY) * (eyeZ - paddleZ); 
+    paddleY = tan(thetaY) * (eyeZ - paddleZ);
 
     // -- Make sure paddle's X and Y are within bounds of the box
     if(paddleX - PADDLE_WIDTH/2 < -BOX_WIDTH/2) {
@@ -142,7 +149,7 @@ function scene(pg) {
   pg.sphere(BALL_RADIUS);
   pg.pop();
 
-  // @todo Render text and buttons (main menu, game over screen, or score if game is in progress)
+  // Render text and buttons (main menu, game over screen, or score if game is in progress)
   // gameOn = game is in progress
   // gameOver = game just ended (show game over screen)
   // neither is true = show main menu
@@ -152,26 +159,72 @@ function scene(pg) {
      When game is over, toggle gameOn = false, gameOver = true, and remove "in-game" class from <main>
      When returning to main menu, toggle gameOn = false, gameOver = false
    */
-  
+
   if(gameOn) {
     // Render score
-    console.log(score);
+    pg.push();
+    pg.fill(255);
+    pg.textFont(fontValorax, 30);
+    pg.text(`Score: ${score}`, -BOX_WIDTH/2, -BOX_HEIGHT/2, BOX_WIDTH, 200);
+    pg.pop(); 
   } else if(gameOver) {
     // Render Game Over screen
-    console.log('game over');
-    console.log('final score', score);
+    pg.push();
+    pg.fill(255);
+    pg.textFont(fontValorax, 60);
+    pg.textAlign(CENTER); 
+    pg.text("Game Over", -BOX_WIDTH/2, -BOX_HEIGHT/2, BOX_WIDTH, 300);
+    pg.text(`Final Score: ${score}`, -BOX_WIDTH/2, -BOX_HEIGHT/2 + 100, BOX_WIDTH, 300);
+    
+    const nMouseX = mouseX - windowWidth / 2;
+    const nMouseY = mouseY - windowHeight / 2;
 
-    // -- Render button to start a new game
-    // -- Render button to return to main menu
+    if(nMouseX > -160 && nMouseX < 160
+       && nMouseY > 80 && nMouseY < 240) {
+      pg.fill(166); 
+    }
+    pg.textFont(fontValorax, 50); 
+    pg.text(">>Restart<<", -80, 200, 160, 160);
+    
+    pg.pop(); 
   } else {
     // Render Main Menu
-    let tg = createGraphics(BOX_WIDTH, BOX_HEIGHT);
-    tg.fill(255);
-    tg.stroke(255); 
-    tg.text('Hello world', 20, 300);
-    pg.texture(tg);
-    pg.plane(BOX_WIDTH, BOX_HEIGHT);
-
+    pg.push();
+    pg.fill(255); 
+    pg.textFont(fontValorax, 75);
+    pg.textAlign(CENTER);
+    
+    // -- Render game title
+    pg.text("Curveball 3D", -BOX_WIDTH/2, -BOX_HEIGHT/2, BOX_WIDTH, BOX_HEIGHT); 
+    
     // -- Render button to start game
+    const nMouseX = mouseX - windowWidth / 2;
+    const nMouseY = mouseY - windowHeight / 2;
+    
+    // I don't even understand these numbers
+    if(nMouseX > -160 && nMouseX < 160
+       && nMouseY > 80 && nMouseY < 240) {
+      pg.fill(166); 
+    }
+    pg.textFont(fontValorax, 50); 
+    pg.text(">>Play<<", -80, 200, 160, 160);
+    
+    pg.pop(); 
   }
+}
+
+function mouseClicked() {
+  const nMouseX = mouseX - windowWidth / 2;
+  const nMouseY = mouseY - windowHeight / 2;
+
+  if(nMouseX > -160 && nMouseX < 160
+     && nMouseY > 80 && nMouseY < 240) {
+    if(gameOver || (!gameOver && !gameOn)) {
+      gameOn = true;
+      gameOver = false;
+      score = 0;
+      position = createVector(0, 0, 0);
+      acceleration = createVector(5, 5, 12); 
+    }
+  }      
 }
